@@ -1,0 +1,57 @@
+################################################################
+#
+# Configuration for Traefik v2.
+#
+################################################################
+
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false
+
+entryPoints:
+  web:
+    address: :80
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: false
+
+  websecure:
+    address: :443
+    http:
+      tls: {}
+  
+  ping:
+    address: ":8000"
+  
+  metrics:
+    address: ":9000"
+
+log:
+  level: INFO
+
+accessLog: {}
+
+api:
+  insecure: false
+  dashboard: true
+
+ping:
+  entryPoint: ping
+
+metrics:
+  prometheus:
+    addServicesLabels: true
+    entryPoint: metrics
+
+providers:
+  file:
+    filename: /etc/traefik/dynamic.yml
+
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    swarmMode: true
+    network: backend
