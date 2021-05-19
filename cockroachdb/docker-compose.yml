@@ -1,0 +1,144 @@
+version: "3.9"
+
+services:
+  cockroachdb-1:
+    image: cockroachdb/cockroach:v20.2.10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+      labels:
+        - "traefik.enable=true"
+
+        - "traefik.http.routers.cockroachdb-admin.rule=PathPrefix(`/cockroachdb`)"
+        - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
+        - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
+        - "traefik.http.routers.cockroachdb-admin.middlewares=traefik-compress"
+        - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
+        - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
+        - "traefik.http.middlewares.cockroachdb-admin.compress=true"
+
+        - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
+        - "traefik.tcp.routers.cockroachdb.service=cockroachdb-service"
+        - "traefik.tcp.routers.cockroachdb.tls=true"
+        - "traefik.tcp.services.cockroachdb-service.loadbalancer.server.port=26257"
+
+    stop_grace_period: 60s
+
+    volumes:
+      - cockroachdb-1:/cockroach/cockroach-data
+
+    networks:
+      - backend
+
+    command: start --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --insecure
+
+  cockroachdb-2:
+    image: cockroachdb/cockroach:v20.2.10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+      labels:
+        - "traefik.enable=true"
+
+        - "traefik.http.routers.cockroachdb-admin.rule=PathPrefix(`/cockroachdb`)"
+        - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
+        - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
+        - "traefik.http.routers.cockroachdb-admin.middlewares=traefik-compress"
+        - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
+        - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
+        - "traefik.http.middlewares.cockroachdb-admin.compress=true"
+
+        - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
+        - "traefik.tcp.routers.cockroachdb.service=cockroachdb-service"
+        - "traefik.tcp.routers.cockroachdb.tls=true"
+        - "traefik.tcp.services.cockroachdb-service.loadbalancer.server.port=26257"
+
+    stop_grace_period: 60s
+
+    volumes:
+      - cockroachdb-2:/cockroach/cockroach-data
+
+    networks:
+      - backend
+
+    command: start --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --insecure
+
+  cockroachdb-3:
+    image: cockroachdb/cockroach:v20.2.10
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+      labels:
+        - "traefik.enable=true"
+
+        - "traefik.http.routers.cockroachdb-admin.rule=PathPrefix(`/cockroachdb`)"
+        - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
+        - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
+        - "traefik.http.routers.cockroachdb-admin.middlewares=traefik-compress"
+        - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
+        - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
+        - "traefik.http.middlewares.cockroachdb-admin.compress=true"
+
+        - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
+        - "traefik.tcp.routers.cockroachdb.service=cockroachdb-service"
+        - "traefik.tcp.routers.cockroachdb.tls=true"
+        - "traefik.tcp.services.cockroachdb-service.loadbalancer.server.port=26257"
+
+    stop_grace_period: 60s
+
+    volumes:
+      - cockroachdb-3:/cockroach/cockroach-data
+
+    networks:
+      - backend
+
+    command: start --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --insecure
+
+volumes:
+  cockroachdb-1:
+  cockroachdb-2:
+  cockroachdb-3:
+
+# Create this as driver=Overlay scope=swarm before deploying
+networks:
+  backend:
+    external: true

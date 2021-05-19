@@ -10,7 +10,7 @@ global:
 
 entryPoints:
   web:
-    address: :80
+    address: ":80"
     http:
       redirections:
         entryPoint:
@@ -19,10 +19,13 @@ entryPoints:
           permanent: false
 
   websecure:
-    address: :443
+    address: ":443"
     http:
       tls: {}
   
+  cockroachdb:
+    address: ":26257"
+
   ping:
     address: ":8000"
   
