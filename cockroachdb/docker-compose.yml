@@ -30,6 +30,7 @@ services:
         - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
         - "traefik.http.middlewares.cockroachdb-admin.compress=true"
 
+        - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
         - "traefik.tcp.routers.cockroachdb.service=cockroachdb-service"
         - "traefik.tcp.routers.cockroachdb.tls=true"
@@ -74,6 +75,7 @@ services:
         - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
         - "traefik.http.middlewares.cockroachdb-admin.compress=true"
 
+        - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
         - "traefik.tcp.routers.cockroachdb.service=cockroachdb-service"
         - "traefik.tcp.routers.cockroachdb.tls=true"
@@ -118,12 +120,16 @@ services:
         - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
         - "traefik.http.middlewares.cockroachdb-admin.compress=true"
 
+        - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
         - "traefik.tcp.routers.cockroachdb.service=cockroachdb-service"
         - "traefik.tcp.routers.cockroachdb.tls=true"
         - "traefik.tcp.services.cockroachdb-service.loadbalancer.server.port=26257"
 
     stop_grace_period: 60s
+
+    ports:
+      - "8080:8080"
 
     volumes:
       - cockroachdb-3:/cockroach/cockroach-data
