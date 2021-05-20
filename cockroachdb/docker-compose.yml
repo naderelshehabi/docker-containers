@@ -22,13 +22,13 @@ services:
       labels:
         - "traefik.enable=true"
 
-        - "traefik.http.routers.cockroachdb-admin.rule=PathPrefix(`/cockroachdb`)"
-        - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
-        - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
-        - "traefik.http.routers.cockroachdb-admin.middlewares=cockroachdb-compress"
-        - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
-        - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
-        - "traefik.http.middlewares.cockroachdb-compress.compress=true"
+        # - "traefik.http.routers.cockroachdb-admin.rule=PathPrefix(`/cockroachdb`)"
+        # - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
+        # - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
+        # - "traefik.http.routers.cockroachdb-admin.middlewares=cockroachdb-compress"
+        # - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
+        # - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
+        # - "traefik.http.middlewares.cockroachdb-compress.compress=true"
 
         - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
@@ -44,7 +44,28 @@ services:
     networks:
       - backend
 
-    command: start --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --insecure
+    secrets:
+      - source: CA_CERT
+        target: ca.crt
+      - source: CA_KEY
+        target: ca.key
+      - source: ROOT_CERT
+        target: client.root.crt
+      - source: ROOT_KEY
+        target: client.root.key
+        mode: 0600
+
+    ports:
+      - "8080:8080"
+
+    entrypoint: bash
+
+    command: >
+      -c "
+        cockroach cert create-node cockroachdb-1 localhost 127.0.0.1 --certs-dir=/run/secrets --ca-key=/run/secrets/ca.key && \
+        sleep 10s; cockroach init --host=cockroachdb-1 --certs-dir=/run/secrets & \
+        cockroach start --advertise-addr=cockroachdb-1 --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --certs-dir=/run/secrets 
+      "
 
   cockroachdb-2:
     image: cockroachdb/cockroach:v20.2.10
@@ -67,13 +88,13 @@ services:
       labels:
         - "traefik.enable=true"
 
-        - "traefik.http.routers.cockroachdb-admin.rule=PathPrefix(`/cockroachdb`)"
-        - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
-        - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
-        - "traefik.http.routers.cockroachdb-admin.middlewares=cockroachdb-compress"
-        - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
-        - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
-        - "traefik.http.middlewares.cockroachdb-compress.compress=true"
+        # - "traefik.http.routers.cockroachdb-admin.rule=PathPrefix(`/cockroachdb`)"
+        # - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
+        # - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
+        # - "traefik.http.routers.cockroachdb-admin.middlewares=cockroachdb-compress"
+        # - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
+        # - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
+        # - "traefik.http.middlewares.cockroachdb-compress.compress=true"
 
         - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
@@ -89,7 +110,24 @@ services:
     networks:
       - backend
 
-    command: start --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --insecure
+    secrets:
+      - source: CA_CERT
+        target: ca.crt
+      - source: CA_KEY
+        target: ca.key
+      - source: ROOT_CERT
+        target: client.root.crt
+      - source: ROOT_KEY
+        target: client.root.key
+        mode: 0600
+
+    entrypoint: bash
+
+    command: >
+      -c "
+        cockroach cert create-node cockroachdb-2 localhost 127.0.0.1 --certs-dir=/run/secrets --ca-key=/run/secrets/ca.key && \
+        cockroach start --advertise-addr=cockroachdb-2 --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --certs-dir=/run/secrets
+      "
 
   cockroachdb-3:
     image: cockroachdb/cockroach:v20.2.10
@@ -112,13 +150,13 @@ services:
       labels:
         - "traefik.enable=true"
 
-        - "traefik.http.routers.cockroachdb-admin.rule=PathPrefix(`/cockroachdb`)"
-        - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
-        - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
-        - "traefik.http.routers.cockroachdb-admin.middlewares=cockroachdb-compress"
-        - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
-        - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
-        - "traefik.http.middlewares.cockroachdb-compress.compress=true"
+        # - "traefik.http.routers.cockroachdb-admin.rule=PathPrefix(`/cockroachdb`)"
+        # - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
+        # - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
+        # - "traefik.http.routers.cockroachdb-admin.middlewares=cockroachdb-compress"
+        # - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
+        # - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
+        # - "traefik.http.middlewares.cockroachdb-compress.compress=true"
 
         - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
@@ -128,16 +166,30 @@ services:
 
     stop_grace_period: 60s
 
-    ports:
-      - "8080:8080"
-
     volumes:
       - cockroachdb-3:/cockroach/cockroach-data
 
     networks:
       - backend
 
-    command: start --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --insecure
+    secrets:
+      - source: CA_CERT
+        target: ca.crt
+      - source: CA_KEY
+        target: ca.key
+      - source: ROOT_CERT
+        target: client.root.crt
+      - source: ROOT_KEY
+        target: client.root.key
+        mode: 0600
+
+    entrypoint: bash
+
+    command: >
+      -c "
+        cockroach cert create-node cockroachdb-3 localhost 127.0.0.1 --certs-dir=/run/secrets --ca-key=/run/secrets/ca.key && \
+        cockroach start --advertise-addr=cockroachdb-3 --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --certs-dir=/run/secrets
+      "
 
 volumes:
   cockroachdb-1:
@@ -148,3 +200,14 @@ volumes:
 networks:
   backend:
     external: true
+
+secrets:
+  CA_CERT:
+    file: ./secrets/ca.crt
+  CA_KEY:
+    file: ./secrets/ca.key
+
+  ROOT_CERT:
+    file: ./secrets/client.root.crt
+  ROOT_KEY:
+    file: ./secrets/client.root.key
