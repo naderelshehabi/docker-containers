@@ -54,6 +54,8 @@ services:
       - source: ROOT_KEY
         target: client.root.key
         mode: 0600
+      - source: ROACH_PASS
+        target: roach_pass.txt
 
     ports:
       - "8080:8080"
@@ -64,7 +66,8 @@ services:
       -c "
         cockroach cert create-node cockroachdb-1 localhost 127.0.0.1 --certs-dir=/run/secrets --ca-key=/run/secrets/ca.key && \
         sleep 10s; cockroach init --host=cockroachdb-1 --certs-dir=/run/secrets & \
-        cockroach start --advertise-addr=cockroachdb-1 --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --certs-dir=/run/secrets 
+        sleep 30s; roach_pass=$(cat /run/secrets/roach_pass.txt); echo "CREATE USER roach WITH PASSWORD '$roach_pass';" | cockroach sql --host=cockroachdb-1 --certs-dir=/run/secrets & \
+        cockroach start --advertise-addr=cockroachdb-1 --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --certs-dir=/run/secrets
       "
 
   cockroachdb-2:
@@ -211,3 +214,6 @@ secrets:
     file: ./secrets/client.root.crt
   ROOT_KEY:
     file: ./secrets/client.root.key
+
+  ROACH_PASS:
+    file: ./secrets/roach_pass.txt
