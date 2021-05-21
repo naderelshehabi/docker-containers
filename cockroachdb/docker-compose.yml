@@ -42,7 +42,6 @@ services:
         - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
         - "traefik.tcp.routers.cockroachdb.service=cockroachdb-service"
-        - "traefik.tcp.routers.cockroachdb.tls=true"
         - "traefik.tcp.services.cockroachdb-service.loadbalancer.server.port=26257"
 
     stop_grace_period: 60s
@@ -111,7 +110,6 @@ services:
         - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
         - "traefik.tcp.routers.cockroachdb.service=cockroachdb-service"
-        - "traefik.tcp.routers.cockroachdb.tls=true"
         - "traefik.tcp.services.cockroachdb-service.loadbalancer.server.port=26257"
 
     stop_grace_period: 60s
@@ -173,7 +171,6 @@ services:
         - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
         - "traefik.tcp.routers.cockroachdb.service=cockroachdb-service"
-        - "traefik.tcp.routers.cockroachdb.tls=true"
         - "traefik.tcp.services.cockroachdb-service.loadbalancer.server.port=26257"
 
     stop_grace_period: 60s
