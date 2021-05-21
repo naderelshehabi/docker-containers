@@ -19,6 +19,15 @@ services:
       rollback_config:
         parallelism: 0
         order: stop-first
+
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 2048M
+        reservations:
+          cpus: "0.25"
+          memory: 1024M
+
       labels:
         - "traefik.enable=true"
 
@@ -88,17 +97,17 @@ services:
       rollback_config:
         parallelism: 0
         order: stop-first
+
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 2048M
+        reservations:
+          cpus: "0.25"
+          memory: 1024M
+
       labels:
         - "traefik.enable=true"
-
-        # - "traefik.http.routers.cockroachdb-admin.rule=PathPrefix(`/cockroachdb`)"
-        # - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
-        # - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
-        # - "traefik.http.routers.cockroachdb-admin.middlewares=cockroachdb-compress"
-        # - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
-        # - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
-        # - "traefik.http.middlewares.cockroachdb-compress.compress=true"
-
         - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
         - "traefik.tcp.routers.cockroachdb.service=cockroachdb-service"
@@ -150,17 +159,17 @@ services:
       rollback_config:
         parallelism: 0
         order: stop-first
+
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 2048M
+        reservations:
+          cpus: "0.25"
+          memory: 1024M
+
       labels:
         - "traefik.enable=true"
-
-        # - "traefik.http.routers.cockroachdb-admin.rule=PathPrefix(`/cockroachdb`)"
-        # - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
-        # - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
-        # - "traefik.http.routers.cockroachdb-admin.middlewares=cockroachdb-compress"
-        # - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
-        # - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
-        # - "traefik.http.middlewares.cockroachdb-compress.compress=true"
-
         - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
         - "traefik.tcp.routers.cockroachdb.service=cockroachdb-service"
