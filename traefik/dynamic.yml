@@ -2,5 +2,5 @@ tls:
   stores:
     default:
       defaultCertificate:
-        certFile: run/secrets/cert.crt
-        keyFile: run/secrets/cert.key
+        certFile: run/secrets/localhost.crt
+        keyFile: run/secrets/localhost.key

@@ -53,9 +53,9 @@ services:
       - source: USERSFILE
         target: usersfile
       - source: SSL_CERT
-        target: cert.crt
+        target: localhost.crt
       - source: SSL_KEY
-        target: cert.key
+        target: localhost.key
 
     healthcheck:
       test:
@@ -82,6 +82,6 @@ secrets:
   USERSFILE:
     file: ./secrets/usersfile.txt
   SSL_CERT:
-    file: ./secrets/cert.crt
+    file: ./secrets/localhost.crt
   SSL_KEY:
-    file: ./secrets/cert.key
+    file: ./secrets/localhost.key
