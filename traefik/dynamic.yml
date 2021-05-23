@@ -1,7 +1,11 @@
 tls:
   certificates:
-    - certFile: /run/secrets/cockroachdb.127.0.0.1.nip.io.crt
-      keyFile: /run/secrets/cockroachdb.127.0.0.1.nip.io.key
+    - certFile: /run/secrets/localhost.crt
+      keyFile: /run/secrets/localhost.key
+      stores:
+        - default
+    - certFile: /run/secrets/cockroachdb.crt
+      keyFile: /run/secrets/cockroachdb.key
       stores:
         - default
   stores:

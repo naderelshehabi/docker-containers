@@ -57,9 +57,9 @@ services:
       - source: SSL_KEY
         target: localhost.key
       - source: COCKROACHDB_CERT
-        target: cockroachdb.127.0.0.1.nip.io.crt
+        target: cockroachdb.crt
       - source: COCKROACHDB_KEY
-        target: cockroachdb.127.0.0.1.nip.io.key
+        target: cockroachdb.key
 
     healthcheck:
       test:
@@ -90,6 +90,6 @@ secrets:
   SSL_KEY:
     file: ./secrets/localhost.key
   COCKROACHDB_CERT:
-    file: ./secrets/cockroachdb.127.0.0.1.nip.io.crt
+    file: ./secrets/cockroachdb.crt
   COCKROACHDB_KEY:
-    file: ./secrets/cockroachdb.127.0.0.1.nip.io.key
+    file: ./secrets/cockroachdb.key
