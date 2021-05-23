@@ -120,7 +120,6 @@ services:
         - "traefik.http.services.cockroachdb-admin.loadbalancer.server.scheme=https"
         - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
         - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
-        - "traefik.http.middlewares.cockroachdb-compress.compress=true"
 
         - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
@@ -193,7 +192,6 @@ services:
         - "traefik.http.services.cockroachdb-admin.loadbalancer.server.scheme=https"
         - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
         - "traefik.http.services.cockroachdb-admin.loadBalancer.sticky.cookie"
-        - "traefik.http.middlewares.cockroachdb-compress.compress=true"
 
         - "traefik.tcp.routers.cockroachdb.rule=HostSNI(`*`)"
         - "traefik.tcp.routers.cockroachdb.entrypoints=cockroachdb"
