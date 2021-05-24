@@ -12,10 +12,10 @@ services:
         window: 120s
       update_config:
         parallelism: 1
-        delay: 30s
-        order: start-first
+        delay: 5s
+        order: stop-first
         failure_action: rollback
-        monitor: 30s
+        monitor: 60s
       rollback_config:
         parallelism: 0
         order: stop-first
@@ -31,13 +31,10 @@ services:
       labels:
         - "traefik.enable=true"
 
-        - "traefik.http.routers.cockroachdb-admin.rule=Host(`cockroachdb.127.0.0.1.nip.io`)"
+        - "traefik.http.routers.cockroachdb-admin.rule=HostRegexp(`{host:.+}`)"
         - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
-        - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
+        - "traefik.http.routers.cockroachdb-admin.entrypoints=cockroachdb-web"
         - "traefik.http.routers.cockroachdb-admin.middlewares=cockroachdb-compress"
-        - "traefik.http.routers.cockroachdb-admin.tls=true"
-        - "traefik.http.routers.cockroachdb-admin.tls.domains[0].main=cockroachdb.127.0.0.1.nip.io"
-        - "traefik.http.routers.cockroachdb-admin.tls.domains[0].sans=cockroachdb.127.0.0.1.nip.io"
 
         - "traefik.http.services.cockroachdb-admin.loadbalancer.server.scheme=https"
         - "traefik.http.services.cockroachdb-admin.loadbalancer.server.port=8080"
@@ -83,8 +80,8 @@ services:
     command: >
       -c "
         ( /init.sh ) & \
-        cockroach cert create-node cockroachdb-1 localhost 127.0.0.1 cockroachdb.127.0.0.1.nip.io --certs-dir=/run/secrets --ca-key=/run/secrets/ca.key && \
-        cockroach start --advertise-addr=cockroachdb-1 --http-addr=cockroachdb.127.0.0.1.nip.io:8080 --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --certs-dir=/run/secrets
+        cockroach cert create-node cockroachdb-1 localhost 127.0.0.1 --certs-dir=/run/secrets --ca-key=/run/secrets/ca.key && \
+        cockroach start --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --certs-dir=/run/secrets
       "
 
   cockroachdb-2:
@@ -98,8 +95,8 @@ services:
         window: 120s
       update_config:
         parallelism: 1
-        delay: 30s
-        order: start-first
+        delay: 60s
+        order: stop-first
         failure_action: rollback
         monitor: 30s
       rollback_config:
@@ -155,8 +152,8 @@ services:
 
     command: >
       -c "
-        cockroach cert create-node cockroachdb-2 localhost 127.0.0.1 cockroachdb.127.0.0.1.nip.io --certs-dir=/run/secrets --ca-key=/run/secrets/ca.key && \
-        cockroach start --advertise-addr=cockroachdb-2 --http-addr=cockroachdb.127.0.0.1.nip.io:8080 --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --certs-dir=/run/secrets
+        cockroach cert create-node cockroachdb-2 localhost 127.0.0.1 --certs-dir=/run/secrets --ca-key=/run/secrets/ca.key && \
+        cockroach start --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --certs-dir=/run/secrets
       "
 
   cockroachdb-3:
@@ -170,8 +167,8 @@ services:
         window: 120s
       update_config:
         parallelism: 1
-        delay: 30s
-        order: start-first
+        delay: 90s
+        order: stop-first
         failure_action: rollback
         monitor: 30s
       rollback_config:
@@ -227,8 +224,8 @@ services:
 
     command: >
       -c "
-        cockroach cert create-node cockroachdb-3 localhost 127.0.0.1 cockroachdb.127.0.0.1.nip.io --certs-dir=/run/secrets --ca-key=/run/secrets/ca.key && \
-        cockroach start --advertise-addr=cockroachdb-3 --http-addr=cockroachdb.127.0.0.1.nip.io:8080 --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --certs-dir=/run/secrets
+        cockroach cert create-node cockroachdb-3 localhost 127.0.0.1 --certs-dir=/run/secrets --ca-key=/run/secrets/ca.key && \
+        cockroach start --join=cockroachdb-1:26257,cockroachdb-2:26257,cockroachdb-3:26257 --cache=.25 --max-sql-memory=.25 --logtostderr --certs-dir=/run/secrets
       "
 
 volumes:

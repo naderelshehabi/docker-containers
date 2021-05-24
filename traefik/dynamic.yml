@@ -4,10 +4,6 @@ tls:
       keyFile: /run/secrets/localhost.key
       stores:
         - default
-    - certFile: /run/secrets/cockroachdb.crt
-      keyFile: /run/secrets/cockroachdb.key
-      stores:
-        - default
   stores:
     default:
       defaultCertificate:
