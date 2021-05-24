@@ -25,6 +25,9 @@ entryPoints:
   
   cockroachdb:
     address: ":26257"
+  
+  cockroachdb-web:
+    address: ":8080"
 
   ping:
     address: ":8000"

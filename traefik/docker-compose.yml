@@ -13,10 +13,10 @@ services:
         window: 120s
       update_config:
         parallelism: 1
-        delay: 30s
+        delay: 60s
         order: start-first
         failure_action: rollback
-        monitor: 30s
+        monitor: 60s
       rollback_config:
         parallelism: 0
         order: stop-first
@@ -56,10 +56,6 @@ services:
         target: localhost.crt
       - source: SSL_KEY
         target: localhost.key
-      - source: COCKROACHDB_CERT
-        target: cockroachdb.crt
-      - source: COCKROACHDB_KEY
-        target: cockroachdb.key
 
     healthcheck:
       test:
@@ -89,7 +85,3 @@ secrets:
     file: ./secrets/localhost.crt
   SSL_KEY:
     file: ./secrets/localhost.key
-  COCKROACHDB_CERT:
-    file: ./secrets/cockroachdb.crt
-  COCKROACHDB_KEY:
-    file: ./secrets/cockroachdb.key
