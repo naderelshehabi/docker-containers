@@ -8,6 +8,9 @@ global:
   checkNewVersion: true
   sendAnonymousUsage: false
 
+serversTransport:
+  insecureSkipVerify: true
+
 entryPoints:
   web:
     address: ":80"
@@ -26,9 +29,6 @@ entryPoints:
   cockroachdb:
     address: ":26257"
   
-  cockroachdb-web:
-    address: ":8080"
-
   ping:
     address: ":8000"
   
