@@ -33,6 +33,8 @@ services:
       PGADMIN_DEFAULT_EMAIL: dr.elshehabi@gmail.com
       PGADMIN_DEFAULT_PASSWORD: SecretPass
 
+    volumes:
+      - pgadmin:/var/lib/pgadmin
     networks:
       - backend
 
@@ -40,3 +42,6 @@ services:
 networks:
   backend:
     external: true
+
+volumes:
+  pgadmin: {}
