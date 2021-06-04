@@ -1,8 +1,12 @@
+# This file uses variable substitution
+# To deploy to docker swarm use the following command
+# docker stack deploy -c <(docker-compose --env-file docker.env config) pgadmin
+
 version: "3.9"
 
 services:
   pgadmin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4:${TAG}
     deploy:
       replicas: 1
       restart_policy:
@@ -13,25 +17,42 @@ services:
       update_config:
         parallelism: 1
         delay: 30s
-        order: start-first
+        order: stop-first
         failure_action: rollback
         monitor: 30s
       rollback_config:
         parallelism: 0
         order: stop-first
 
+      resources:
+        limits:
+          # cpus: "1.0"
+          memory: 1024M
+        reservations:
+          memory: 64M
+
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.pgadmin.rule=PathPrefix(`/pgadmin`)"
+        - "traefik.http.routers.pgadmin.rule=PathPrefix(`${PATH_PREFIX}`)"
         - "traefik.http.routers.pgadmin.entrypoints=websecure"
         - "traefik.http.routers.pgadmin.middlewares=pgadmin-compress"
         - "traefik.http.services.pgadmin-service.loadbalancer.server.port=80"
         - "traefik.http.middlewares.pgadmin-compress.compress=true"
 
     environment:
-      SCRIPT_NAME: /pgadmin
-      PGADMIN_DEFAULT_EMAIL: dr.elshehabi@gmail.com
-      PGADMIN_DEFAULT_PASSWORD: SecretPass
+      SCRIPT_NAME: ${PATH_PREFIX}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_USER}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASS}
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost/pgadmin/misc/ping || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
     volumes:
       - pgadmin:/var/lib/pgadmin

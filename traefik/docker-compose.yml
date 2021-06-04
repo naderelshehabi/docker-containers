@@ -1,3 +1,7 @@
+# This file uses variable substitution
+# To deploy to docker swarm use the following command
+# docker stack deploy -c <(docker-compose --env-file docker.env config) traefik
+
 version: "3.9"
 
 services:
@@ -21,6 +25,13 @@ services:
         parallelism: 0
         order: stop-first
 
+      resources:
+        limits:
+          # cpus: "1.0"
+          memory: 1024M
+        reservations:
+          memory: 32M
+
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.traefik.rule=(PathPrefix(`/dashboard`) || PathPrefix(`/api`))"
@@ -33,8 +44,13 @@ services:
         - "traefik.http.middlewares.traefik-auth.digestauth.usersfile=/run/secrets/usersfile"
 
     ports:
+      # http
       - "80:80"
+      # https
       - "443:443"
+      # cadvisor
+      - "8080:8080"
+      # cockroachdb
       - "26257:26257"
 
     volumes:
@@ -44,18 +60,18 @@ services:
       - backend
 
     configs:
-      - source: traefik_config
+      - source: traefik-config
         target: /etc/traefik/traefik.yml
-      - source: traefik_dynamic_config
+      - source: traefik-dynamic-config
         target: /etc/traefik/dynamic.yml
 
     secrets:
-      - source: USERSFILE
+      - source: usersfile
         target: usersfile
-      - source: SSL_CERT
-        target: localhost.crt
-      - source: SSL_KEY
-        target: localhost.key
+      - source: ssl-cert
+        target: cert.crt
+      - source: ssl-key
+        target: cert.key
 
     healthcheck:
       test:
@@ -73,15 +89,21 @@ networks:
     external: true
 
 configs:
-  traefik_config:
-    file: ./traefik.yml
-  traefik_dynamic_config:
-    file: ./dynamic.yml
+  traefik-config:
+    file: ${traefik_config_file}
+    name: ${traefik_config}
+
+  traefik-dynamic-config:
+    file: ${traefik_dynamic_config_file}
+    name: ${traefik_dynamic_config}
 
 secrets:
-  USERSFILE:
-    file: ./secrets/usersfile.txt
-  SSL_CERT:
-    file: ./secrets/localhost.crt
-  SSL_KEY:
-    file: ./secrets/localhost.key
+  usersfile:
+    file: ${usersfile_file}
+    name: ${usersfile}
+  ssl-cert:
+    file: ${ssl_cert_file}
+    name: ${ssl_cert}
+  ssl-key:
+    file: ${ssl_key_file}
+    name: ${ssl_key}

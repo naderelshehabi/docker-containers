@@ -26,6 +26,12 @@ entryPoints:
     http:
       tls: {}
   
+  cadvisor:
+    address: ":8080"
+    http:
+      tls: {}
+
+
   cockroachdb:
     address: ":26257"
   
