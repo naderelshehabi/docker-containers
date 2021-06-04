@@ -1,11 +1,12 @@
 tls:
   certificates:
-    - certFile: /run/secrets/localhost.crt
-      keyFile: /run/secrets/localhost.key
+    - certFile: /run/secrets/cert.crt
+      keyFile: /run/secrets/cert.key
       stores:
         - default
+        
   stores:
     default:
       defaultCertificate:
-        certFile: /run/secrets/localhost.crt
-        keyFile: /run/secrets/localhost.key
+        certFile: /run/secrets/cert.crt
+        keyFile: /run/secrets/cert.key

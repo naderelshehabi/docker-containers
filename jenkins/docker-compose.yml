@@ -1,8 +1,12 @@
+# This file uses variable substitution
+# To deploy to docker swarm use the following command
+# docker stack deploy -c <(docker-compose --env-file docker.env config) jenkins
+
 version: "3.9"
 
 services:
   jenkins:
-    image: drelshehabi/jenkins:1.0
+    image: drelshehabi/jenkins:${TAG}
     deploy:
       replicas: 1
       restart_policy:
@@ -13,24 +17,31 @@ services:
       update_config:
         parallelism: 1
         delay: 30s
-        order: start-first
+        order: stop-first
         failure_action: rollback
         monitor: 30s
       rollback_config:
         parallelism: 0
         order: stop-first
 
+      resources:
+        limits:
+          # cpus: "1.0"
+          memory: 1024M
+        reservations:
+          memory: 64M
+
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.jenkins.rule=PathPrefix(`/jenkins`)"
+        - "traefik.http.routers.jenkins.rule=PathPrefix(`${PATH_PREFIX}`)"
         - "traefik.http.routers.jenkins.entrypoints=websecure"
         - "traefik.http.routers.jenkins.middlewares=jenkins-compress"
         - "traefik.http.services.jenkins-service.loadbalancer.server.port=8080"
         - "traefik.http.middlewares.jenkins-compress.compress=true"
 
     environment:
-      JENKINS_URL: https://localhost/jenkins
-      JENKINS_OPTS: --prefix=/jenkins
+      JENKINS_URL: ${JENKINS_URL}
+      JENKINS_OPTS: --prefix=${PATH_PREFIX}
 
     volumes:
       - jenkins_home:/var/jenkins_home
@@ -40,14 +51,14 @@ services:
       - backend
 
     configs:
-      - source: JENKINS_CONFIG
+      - source: jenkins-config
         target: /var/jenkins_home/jenkins-config.yml
-      - source: JENKINS_STARTUP
+      - source: jenkins-startup
         target: /usr/share/jenkins/ref/init.groovy.d/startup.groovy
 
     secrets:
-      - JENKINS_ADMIN_ID
-      - JENKINS_ADMIN_PASSWORD
+      - jenkins-admin
+      - jenkins-password
 
     healthcheck:
       test: ["CMD-SHELL", "curl http://localhost:8080 || exit 1"]
@@ -64,13 +75,17 @@ networks:
     external: true
 
 configs:
-  JENKINS_CONFIG:
-    file: ./jenkins-config.yml
-  JENKINS_STARTUP:
-    file: ./startup.groovy
+  jenkins-config:
+    name: ${JENKINS_CONFIG}
+    file: ${JENKINS_CONFIG_FILE}
+  jenkins-startup:
+    name: ${JENKINS_STARTUP}
+    file: ${JENKINS_STARTUP_FILE}
 
 secrets:
-  JENKINS_ADMIN_ID:
-    file: ./secrets/jenkins_admin_id.txt
-  JENKINS_ADMIN_PASSWORD:
-    file: ./secrets/jenkins_admin_password.txt
+  jenkins-admin:
+    name: ${JENKINS_ADMIN}
+    file: ${JENKINS_ADMIN_FILE}
+  jenkins-password:
+    name: ${JENKINS_PASSWORD}
+    file: ${JENKINS_PASSWORD_FILE}

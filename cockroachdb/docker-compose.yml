@@ -1,8 +1,12 @@
+# This file uses variable substitution
+# To deploy to docker swarm use the following command
+# docker stack deploy -c <(docker-compose --env-file docker.env config) cockroachdb
+
 version: "3.9"
 
 services:
   cockroachdb-1:
-    image: cockroachdb/cockroach:v20.2.10
+    image: cockroachdb/cockroach:${TAG}
     deploy:
       replicas: 1
       restart_policy:
@@ -22,16 +26,16 @@ services:
 
       resources:
         limits:
-          cpus: "1.00"
-          memory: 2048M
+          # cpus: "1.0"
+          memory: 4096M
         reservations:
-          cpus: "0.25"
+          # cpus: "0.25"
           memory: 1024M
 
       labels:
         - "traefik.enable=true"
 
-        - "traefik.http.routers.cockroachdb-admin.rule=Host(`cockroachdb.127.0.0.1.nip.io`)"
+        - "traefik.http.routers.cockroachdb-admin.rule=Host(`${URL}`)"
         - "traefik.http.routers.cockroachdb-admin.service=cockroachdb-admin"
         - "traefik.http.routers.cockroachdb-admin.entrypoints=websecure"
         - "traefik.http.routers.cockroachdb-admin.middlewares=cockroachdb-compress"
@@ -57,16 +61,16 @@ services:
       - backend
 
     secrets:
-      - source: CA_CERT
+      - source: ca-cert
         target: ca.crt
-      - source: CA_KEY
+      - source: ca-key
         target: ca.key
-      - source: ROOT_CERT
+      - source: root-cert
         target: client.root.crt
-      - source: ROOT_KEY
+      - source: root-key
         target: client.root.key
         mode: 0600
-      - source: ROACH_PASS
+      - source: roach-pass
         target: roach_pass.txt
 
     healthcheck:
@@ -85,7 +89,7 @@ services:
       "
 
   cockroachdb-2:
-    image: cockroachdb/cockroach:v20.2.10
+    image: cockroachdb/cockroach:${TAG}
     deploy:
       replicas: 1
       restart_policy:
@@ -105,10 +109,10 @@ services:
 
       resources:
         limits:
-          cpus: "1.00"
-          memory: 2048M
+          # cpus: "1.00"
+          memory: 4096M
         reservations:
-          cpus: "0.25"
+          # cpus: "0.25"
           memory: 1024M
 
       labels:
@@ -132,13 +136,13 @@ services:
       - backend
 
     secrets:
-      - source: CA_CERT
+      - source: ca-cert
         target: ca.crt
-      - source: CA_KEY
+      - source: ca-key
         target: ca.key
-      - source: ROOT_CERT
+      - source: root-cert
         target: client.root.crt
-      - source: ROOT_KEY
+      - source: root-key
         target: client.root.key
         mode: 0600
 
@@ -157,7 +161,7 @@ services:
       "
 
   cockroachdb-3:
-    image: cockroachdb/cockroach:v20.2.10
+    image: cockroachdb/cockroach:${TAG}
     deploy:
       replicas: 1
       restart_policy:
@@ -177,10 +181,10 @@ services:
 
       resources:
         limits:
-          cpus: "1.00"
-          memory: 2048M
+          # cpus: "1.00"
+          memory: 4096M
         reservations:
-          cpus: "0.25"
+          # cpus: "0.25"
           memory: 1024M
 
       labels:
@@ -204,13 +208,13 @@ services:
       - backend
 
     secrets:
-      - source: CA_CERT
+      - source: ca-cert
         target: ca.crt
-      - source: CA_KEY
+      - source: ca-key
         target: ca.key
-      - source: ROOT_CERT
+      - source: root-cert
         target: client.root.crt
-      - source: ROOT_KEY
+      - source: root-key
         target: client.root.key
         mode: 0600
 
@@ -239,15 +243,18 @@ networks:
     external: true
 
 secrets:
-  CA_CERT:
-    file: ./secrets/ca.crt
-  CA_KEY:
-    file: ./secrets/ca.key
-
-  ROOT_CERT:
-    file: ./secrets/client.root.crt
-  ROOT_KEY:
-    file: ./secrets/client.root.key
-
-  ROACH_PASS:
-    file: ./secrets/roach_pass.txt
+  ca-cert:
+    name: ${CA_CERT}
+    file: ${CA_CERT_FILE}
+  ca-key:
+    name: ${CA_KEY}
+    file: ${CA_KEY_FILE}
+  root-cert:
+    name: ${ROOT_CERT}
+    file: ${ROOT_CERT_FILE}
+  root-key:
+    name: ${ROOT_KEY}
+    file: ${ROOT_KEY_FILE}
+  roach-pass:
+    name: ${ROACH_PASS}
+    file: ${ROACH_PASS_FILE}
