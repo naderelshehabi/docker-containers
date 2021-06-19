@@ -1,0 +1,49 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+  external_labels:
+    monitor: 'prometheus'
+
+rule_files:
+  - "swarm_node.rules.yml"
+  - "swarm_task.rules.yml"
+
+alerting:
+  alertmanagers:
+    - scheme: http
+      path_prefix: "/alertmanager"
+      static_configs:
+      - targets:
+        - alertmanager:9093
+
+scrape_configs:
+  - job_name: 'prometheus'
+    metrics_path: '/prometheus/metrics'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'traefik'
+    dns_sd_configs:
+      - names:
+        - 'tasks.traefik_traefik'
+        type: 'A'
+        port: 9000
+
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['host.docker.internal:9323']
+
+  - job_name: 'cadvisor'
+    dns_sd_configs:
+    - names:
+      - 'tasks.cadvisor'
+      type: 'A'
+      port: 8080
+
+  - job_name: 'node-exporter'
+    dns_sd_configs:
+    - names:
+      - 'tasks.node-exporter'
+      type: 'A'
+      port: 9100
