@@ -1,0 +1,414 @@
+# This file uses variable substitution
+# To deploy to docker swarm use the following command
+# docker stack deploy -c <(docker-compose --env-file docker.env config) prometheus
+
+version: "3.9"
+
+services:
+  node-exporter:
+    image: prom/node-exporter:v1.1.2
+    user: root
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+    environment:
+      - NODE-ID={{.Node.ID}}
+
+    entrypoint: "/etc/node-exporter/node-exporter-entrypoint.sh"
+
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)"
+      - "--collector.textfile.directory=/etc/node-exporter/"
+      - "--no-collector.ipvs"
+
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      # Get local machine name mounted on a directory in the container to be exposed as metadata
+      - /etc/hostname:/etc/nodename:ro
+      - ./node-exporter-entrypoint.sh:/etc/node-exporter/node-exporter-entrypoint.sh:ro
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:9100 || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    networks:
+      - backend
+
+  ###########################################################################################################
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.39.1
+    user: root
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.cadvisor.rule=HostRegexp(`{host:.+}`)"
+        - "traefik.http.routers.cadvisor.service=cadvisor"
+        - "traefik.http.routers.cadvisor.entrypoints=cadvisor"
+        - "traefik.http.routers.cadvisor.middlewares=cadvisor-compress"
+        - "traefik.http.routers.cadvisor.middlewares=cadvisor-auth"
+
+        - "traefik.http.services.cadvisor.loadbalancer.server.port=8080"
+
+        - "traefik.http.middlewares.cadvisor-compress.compress=true"
+        - "traefik.http.middlewares.cadvisor-auth.digestauth.usersfile=/run/secrets/usersfile"
+
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+    command: -logtostderr -docker_only
+
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      # - /var/lib/docker:/var/lib/docker:ro
+      # Use this volume for WSL with Docker Desktop
+      - /mnt/docker/version-pack-data/community/docker:/rootfs/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+
+    networks:
+      - backend
+  ###########################################################################################################
+
+  alertmanager:
+    image: prom/alertmanager:v0.22.2
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.alertmanager.rule=PathPrefix(`/alertmanager`)"
+        - "traefik.http.routers.alertmanager.service=alertmanager"
+        - "traefik.http.routers.alertmanager.entrypoints=websecure"
+        - "traefik.http.routers.alertmanager.middlewares=alertmanager-compress"
+        - "traefik.http.routers.alertmanager.middlewares=alertmanager-auth"
+
+        - "traefik.http.services.alertmanager.loadbalancer.server.port=9093"
+
+        - "traefik.http.middlewares.alertmanager-compress.compress=true"
+        - "traefik.http.middlewares.alertmanager-auth.digestauth.usersfile=/run/secrets/usersfile"
+
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--web.external-url=http://alertmanager:9093/alertmanager"
+      - "--storage.path=/alertmanager"
+
+    # for WSL with Docker Desktop you need to add the folowing line to /etc/fstab
+    # '\\wsl$\docker-desktop-data\version-pack-data\community\docker' /mnt/wsl/docker-desktop-data/data/docker drvfs ro,noatime,uid=1000,gid=1000,fmask=0027,dmask=0027,metadata 0
+    volumes:
+      - alertmanager:/alertmanager
+
+    configs:
+      - source: alertmanager-config
+        target: /etc/alertmanager/alertmanager.yml
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:9093/alertmanager/-/healthy || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    networks:
+      - backend
+
+  ###########################################################################################################
+
+  karma:
+    image: ghcr.io/prymitive/karma:v0.86
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 10
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 32M
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.karma-http.rule=PathPrefix(`/karma`)"
+        - "traefik.http.routers.karma-http.service=karma"
+        - "traefik.http.routers.karma-http.entrypoints=websecure"
+        - "traefik.http.routers.karma-http.middlewares=karma-compress"
+        - "traefik.http.routers.karma-http.middlewares=karma-auth"
+
+        - "traefik.http.services.karma.loadbalancer.server.port=8080"
+
+        - "traefik.http.middlewares.karma-compress.compress=true"
+        - "traefik.http.middlewares.karma-auth.digestauth.usersfile=/run/secrets/usersfile"
+
+    environment:
+      - "CONFIG_FILE=/etc/karma/karma.yml"
+
+    configs:
+      - source: karma-config
+        target: /etc/karma/karma.yml
+
+    networks:
+      - backend
+
+  ###########################################################################################################
+
+  prometheus:
+    image: prom/prometheus:v2.27.1
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 64M
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.prometheus-http.rule=PathPrefix(`/prometheus`)"
+        - "traefik.http.routers.prometheus-http.service=prometheus"
+        - "traefik.http.routers.prometheus-http.entrypoints=websecure"
+        - "traefik.http.routers.prometheus-http.middlewares=prometheus-compress"
+        - "traefik.http.routers.prometheus-http.middlewares=prometheus-auth"
+
+        - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+
+        - "traefik.http.middlewares.prometheus-compress.compress=true"
+        - "traefik.http.middlewares.prometheus-auth.digestauth.usersfile=/run/secrets/usersfile"
+
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.external-url=http://localhost:9090/prometheus/"
+
+    volumes:
+      - prometheus:/prometheus
+
+    configs:
+      - source: prometheus-config
+        target: /etc/prometheus/prometheus.yml
+      - source: node-rules
+        target: /etc/prometheus/swarm_node.rules.yml
+      - source: task-rules
+        target: /etc/prometheus/swarm_task.rules.yml
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:9090/prometheus/-/healthy || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    networks:
+      - backend
+
+  ###########################################################################################################
+
+  grafana:
+    image: grafana/grafana:7.5.7
+
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.grafana-http.rule=PathPrefix(`/grafana`)"
+        - "traefik.http.routers.grafana-http.service=grafana"
+        - "traefik.http.routers.grafana-http.entrypoints=websecure"
+        - "traefik.http.routers.grafana-http.middlewares=grafana-compress"
+
+        - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+        - "traefik.http.middlewares.grafana-compress.compress=true"
+
+    volumes:
+      - grafana:/var/lib/grafana
+      - ./dashboards:/etc/grafana/dashboards/
+
+    configs:
+      - source: grafana-config
+        target: /etc/grafana/grafana.ini
+      - source: grafana-datasources-config
+        target: /etc/grafana/provisioning/datasources/grafana_datasources.yml
+      - source: grafana-dashboards-config
+        target: /etc/grafana/provisioning/dashboards/grafana_dashboards.yml
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:3000//api/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    networks:
+      - backend
+
+###########################################################################################################
+networks:
+  backend:
+    external: true
+
+volumes:
+  prometheus: {}
+  grafana: {}
+  alertmanager: {}
+
+configs:
+  prometheus-config:
+    name: ${prometheus_config}
+    file: ${prometheus_config_file}
+  node-rules:
+    name: ${node_rules}
+    file: ${node_rules_file}
+  task-rules:
+    name: ${task_rules}
+    file: ${task_rules_file}
+  grafana-config:
+    name: ${grafana_config}
+    file: ${grafana_config_file}
+  grafana-datasources-config:
+    name: ${grafana_datasources_config}
+    file: ${grafana_datasources_config_file}
+  grafana-dashboards-config:
+    name: ${grafana_dashboards_config}
+    file: ${grafana_dashboards_config_file}
+  alertmanager-config:
+    name: ${alertmanager_config}
+    file: ${alertmanager_config_file}
+  karma-config:
+    name: ${karma_config}
+    file: ${karma_config_file}
