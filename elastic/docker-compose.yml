@@ -1,0 +1,61 @@
+# This file uses variable substitution
+# To deploy to docker swarm use the following command
+# docker stack deploy -c <(docker-compose --env-file docker.env config) elastic
+
+version: "3.9"
+
+services:
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.13.2
+
+        deploy:
+            mode: replicated
+            replicas: 1
+
+            restart_policy:
+                condition: on-failure
+                delay: 10s
+                max_attempts: 3
+                window: 120s
+            update_config:
+                parallelism: 1
+                delay: 30s
+                order: stop-first
+                failure_action: rollback
+                monitor: 30s
+            rollback_config:
+                parallelism: 0
+                order: stop-first
+
+            resources:
+                limits:
+                    memory: 4096M
+                reservations:
+                    memory: 1024M
+
+        environment: 
+            - discovery.type=single-node
+            - ELASTIC_PASSWORD_FILE=/run/secrets/elastic_password
+
+        volumes:
+            - elasticsearch:/usr/share/elasticsearch/data
+        
+        networks:
+            - backend
+
+        secrets:
+            - source: elastic-password
+              target: elastic_password
+              mode: 0400
+
+networks:
+    backend:
+        external: true
+
+volumes:
+    elasticsearch: {}
+
+secrets:
+    elastic-password:
+        name: ${elastic_password}
+        file: ${elastic_password_file}
