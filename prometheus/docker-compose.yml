@@ -87,9 +87,9 @@ services:
         order: stop-first
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.cadvisor.rule=HostRegexp(`{host:.+}`)"
+        - "traefik.http.routers.cadvisor.rule=PathPrefix(`/cadvisor`)"
         - "traefik.http.routers.cadvisor.service=cadvisor"
-        - "traefik.http.routers.cadvisor.entrypoints=cadvisor"
+        - "traefik.http.routers.cadvisor.entrypoints=websecure"
         - "traefik.http.routers.cadvisor.middlewares=cadvisor-compress"
         - "traefik.http.routers.cadvisor.middlewares=cadvisor-auth"
 
@@ -104,7 +104,7 @@ services:
         reservations:
           memory: 64M
 
-    command: -logtostderr -docker_only
+    command: -logtostderr -docker_only -url_base_prefix=/cadvisor
 
     volumes:
       - /:/rootfs:ro
@@ -115,8 +115,24 @@ services:
       - /mnt/docker/version-pack-data/community/docker:/rootfs/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
 
+     # You have to override CAdvisor default healthcheck when applying url base prefix
+    # https://github.com/google/cadvisor/issues/2190#issuecomment-572528714
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:8080/cadvisor/healthz || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    # prometheus container needs access to bridge network to scrape docker metrics on linux
+    # docker daemon config file shoud have "metrics-addr": "0.0.0.0:9323"
     networks:
       - backend
+      - bridge
+
   ###########################################################################################################
 
   alertmanager:
@@ -381,6 +397,9 @@ services:
 networks:
   backend:
     external: true
+  bridge:
+    external: true
+  
 
 volumes:
   prometheus: {}
