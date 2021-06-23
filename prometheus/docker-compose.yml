@@ -127,11 +127,8 @@ services:
       timeout: 10s
       retries: 3
 
-    # prometheus container needs access to bridge network to scrape docker metrics on linux
-    # docker daemon config file shoud have "metrics-addr": "0.0.0.0:9323"
     networks:
       - backend
-      - bridge
 
   ###########################################################################################################
 
@@ -324,8 +321,11 @@ services:
       timeout: 10s
       retries: 3
 
+    # prometheus container needs access to bridge network to scrape docker metrics on linux
+    # docker daemon config file shoud have "metrics-addr": "0.0.0.0:9323"
     networks:
       - backend
+      - bridge
 
   ###########################################################################################################
 
