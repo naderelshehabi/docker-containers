@@ -3,13 +3,18 @@
 # Adapted from the following setup file
 # https://github.com/elastic/stack-docker/blob/master/scripts/setup-elasticsearch.sh
 
+umask 0002
+
 if [ -f /config/elasticsearch/elasticsearch.keystore ]; then
     echo "Remove old elasticsearch.keystore"
     rm /config/elasticsearch/elasticsearch.keystore
 fi
 
 # Create elastic search directory in the configuration volume
+mkdir -p /usr/share/elasticsearch/config/certs/elasticsearch
+mkdir -p /usr/share/elasticsearch/config/certs/ca
 mkdir -p /config/elasticsearch
+
 mkdir -p /config/ssl
 
 mkdir -p /config/kibana
@@ -21,7 +26,7 @@ echo "=== CREATE Keystore ==="
 echo "Setting bootstrap.password..."
 (cat /run/secrets/elastic_password | /usr/share/elasticsearch/bin/elasticsearch-keystore add -x 'bootstrap.password')
 
-mv /usr/share/elasticsearch/config/elasticsearch.keystore /config/elasticsearch/elasticsearch.keystore
+# mv /usr/share/elasticsearch/config/elasticsearch.keystore /config/elasticsearch/elasticsearch.keystore
 
 # Create SSL Certs
 echo "=== CREATE SSL CERTS ==="
@@ -61,4 +66,8 @@ mv /config/ssl/docker-cluster/logstash/* /config/logstash/
 echo "Move kibana certs to kibana config dir..."
 mv /config/ssl/docker-cluster/kibana/* /config/kibana/
 echo "Move elasticsearch certs to elasticsearch config dir..."
-mv /config/ssl/docker-cluster/elasticsearch/* /config/elasticsearch/
+mv /config/ssl/docker-cluster/elasticsearch/* /usr/share/elasticsearch/config/certs/elasticsearch/
+mv /config/ssl/ca/* /usr/share/elasticsearch/config/certs/ca/
+
+
+chown -R 1000:0 /config
