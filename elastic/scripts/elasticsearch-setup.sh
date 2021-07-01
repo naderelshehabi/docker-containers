@@ -5,6 +5,19 @@ umask 0002
 mkdir -p /usr/share/elasticsearch/config/certs/elasticsearch
 mkdir -p /usr/share/elasticsearch/config/certs/ca
 
+if [ -f /config/elasticsearch/elasticsearch.keystore ]; then
+    echo "Copying existing keystore"
+    cp /config/elasticsearch/elasticsearch.keystore /usr/share/elasticsearch/config/elasticsearch.keystore
+else
+    echo "=== CREATE Keystore ==="
+    /usr/share/elasticsearch/bin/elasticsearch-keystore create
+
+    echo "Setting bootstrap.password..."
+    (cat /run/secrets/elastic_password | /usr/share/elasticsearch/bin/elasticsearch-keystore add -x 'bootstrap.password')
+
+    cp /usr/share/elasticsearch/config/elasticsearch.keystore /config/elasticsearch/elasticsearch.keystore
+fi
+
 if [[ -f /config/ca/ca.crt && -f /config/ca/ca.key && \
     -f /config/elasticsearch/elasticsearch.crt && -f /config/elasticsearch/elasticsearch.key ]]; then
     echo "Copying existing SSL certificates"
@@ -17,21 +30,12 @@ if [[ -f /config/ca/ca.crt && -f /config/ca/ca.key && \
     exit 0
 fi
 
-
 # Create elastic search directory in the configuration volume
 mkdir -p /config/elasticsearch
 mkdir -p /config/ca
-
 mkdir -p /config/ssl
-
 mkdir -p /config/kibana
 mkdir -p /config/logstash
-
-echo "=== CREATE Keystore ==="
-[[ -f /usr/share/elasticsearch/config/elasticsearch.keystore ]] || (/usr/share/elasticsearch/bin/elasticsearch-keystore create)
-
-echo "Setting bootstrap.password..."
-(cat /run/secrets/elastic_password | /usr/share/elasticsearch/bin/elasticsearch-keystore add -x 'bootstrap.password')
 
 # Create SSL Certs
 echo "=== CREATE SSL CERTS ==="
@@ -74,7 +78,6 @@ echo "Move kibana certs to kibana config dir..."
 mv /config/ssl/docker-cluster/kibana/* /config/kibana/
 
 echo "Move elasticsearch certs to elasticsearch config dir..."
-cp /usr/share/elasticsearch/config/elasticsearch.keystore /config/elasticsearch/elasticsearch.keystore
 cp /config/ssl/docker-cluster/elasticsearch/* /usr/share/elasticsearch/config/certs/elasticsearch/
 cp /config/ssl/ca/* /usr/share/elasticsearch/config/certs/ca/
 
