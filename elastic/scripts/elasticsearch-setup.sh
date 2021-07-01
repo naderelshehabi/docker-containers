@@ -2,6 +2,9 @@
 
 umask 0002
 
+mkdir -p /usr/share/elasticsearch/config/certs/elasticsearch
+mkdir -p /usr/share/elasticsearch/config/certs/ca
+
 if [[ -f /config/ca/ca.crt && -f /config/ca/ca.key && \
     -f /config/elasticsearch/elasticsearch.crt && -f /config/elasticsearch/elasticsearch.key ]]; then
     echo "Copying existing SSL certificates"
@@ -16,8 +19,6 @@ fi
 
 
 # Create elastic search directory in the configuration volume
-mkdir -p /usr/share/elasticsearch/config/certs/elasticsearch
-mkdir -p /usr/share/elasticsearch/config/certs/ca
 mkdir -p /config/elasticsearch
 mkdir -p /config/ca
 
