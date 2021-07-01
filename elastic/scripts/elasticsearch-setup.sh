@@ -1,19 +1,25 @@
 #!/bin/bash
 
-# Adapted from the following setup file
-# https://github.com/elastic/stack-docker/blob/master/scripts/setup-elasticsearch.sh
-
 umask 0002
 
-if [ -f /config/elasticsearch/elasticsearch.keystore ]; then
-    echo "Remove old elasticsearch.keystore"
-    rm /config/elasticsearch/elasticsearch.keystore
+if [[ -f /config/ca/ca.crt && -f /config/ca/ca.key && \
+    -f /config/elasticsearch/elasticsearch.crt && -f /config/elasticsearch/elasticsearch.key ]]; then
+    echo "Copying existing SSL certificates"
+
+    cp /config/elasticsearch/* /usr/share/elasticsearch/config/certs/elasticsearch/
+    cp /config/ca/* /usr/share/elasticsearch/config/certs/ca/
+
+    echo "Done!"
+
+    exit 0
 fi
+
 
 # Create elastic search directory in the configuration volume
 mkdir -p /usr/share/elasticsearch/config/certs/elasticsearch
 mkdir -p /usr/share/elasticsearch/config/certs/ca
 mkdir -p /config/elasticsearch
+mkdir -p /config/ca
 
 mkdir -p /config/ssl
 
@@ -25,8 +31,6 @@ echo "=== CREATE Keystore ==="
 
 echo "Setting bootstrap.password..."
 (cat /run/secrets/elastic_password | /usr/share/elasticsearch/bin/elasticsearch-keystore add -x 'bootstrap.password')
-
-# mv /usr/share/elasticsearch/config/elasticsearch.keystore /config/elasticsearch/elasticsearch.keystore
 
 # Create SSL Certs
 echo "=== CREATE SSL CERTS ==="
@@ -58,16 +62,27 @@ echo "Create cluster certs zipfile..."
 if [ -d /config/ssl/docker-cluster ]; then
     rm -rf /config/ssl/docker-cluster
 fi
+
 echo "Unzipping cluster certs zipfile..."
 unzip /config/ssl/docker-cluster.zip -d /config/ssl/docker-cluster
 
 echo "Move logstash certs to logstash config dir..."
 mv /config/ssl/docker-cluster/logstash/* /config/logstash/
+
 echo "Move kibana certs to kibana config dir..."
 mv /config/ssl/docker-cluster/kibana/* /config/kibana/
+
 echo "Move elasticsearch certs to elasticsearch config dir..."
-mv /config/ssl/docker-cluster/elasticsearch/* /usr/share/elasticsearch/config/certs/elasticsearch/
-mv /config/ssl/ca/* /usr/share/elasticsearch/config/certs/ca/
+cp /usr/share/elasticsearch/config/elasticsearch.keystore /config/elasticsearch/elasticsearch.keystore
+cp /config/ssl/docker-cluster/elasticsearch/* /usr/share/elasticsearch/config/certs/elasticsearch/
+cp /config/ssl/ca/* /usr/share/elasticsearch/config/certs/ca/
+
+mv /config/ssl/docker-cluster/elasticsearch/* /config/elasticsearch/
+mv /config/ssl/ca/* /config/ca/
+
+rm -r /config/ssl
 
 
 chown -R 1000:0 /config
+
+echo "Done!"
