@@ -47,7 +47,7 @@ else
     echo "=== CREATE Keystore ==="
     /usr/share/kibana/bin/kibana-keystore create
 
-    echo "Setting bootstrap.password..."
+    echo "Setting elasticsearch.password..."
     (cat /run/secrets/elastic_password | /usr/share/kibana/bin/kibana-keystore add 'elasticsearch.password' -x)
 
     cp /usr/share/kibana/config/kibana.keystore /config/kibana/kibana.keystore
