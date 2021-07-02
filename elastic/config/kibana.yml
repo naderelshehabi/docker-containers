@@ -2,18 +2,25 @@ server.basePath: /kibana
 server.rewriteBasePath: true
 
 server.name: kibana
-server.host: "0"
+server.host: "0.0.0.0"
+# path.data: "/kibana"
+
 elasticsearch.hosts: ["https://elasticsearch:9200/"]
 
 # elasticsearch.password is stored in `kibana.keystore`
 elasticsearch.username: "kibana_system"
 elasticsearch.ssl.certificateAuthorities: ["/usr/share/kibana/config/certs/ca/ca.crt"]
+
+# No need for SSL when behind reverse proxy
 server.ssl.enabled: false
 # server.ssl.certificate: /usr/share/kibana/config/certs/kibana/kibana.crt
 # server.ssl.key: /usr/share/kibana/config/certs/kibana/kibana.key
+
 monitoring.ui.container.elasticsearch.enabled: true
 xpack.reporting.encryptionKey: "qxAa8G/+ZM7vSC/VjwwEhO+8FF6TI928BTalkQoSojM="
 xpack.security.encryptionKey: "qxAa8G/+ZM7vSC/VjwwEhO+8FF6TI928BTalkQoSojM="
 xpack.encryptedSavedObjects.encryptionKey: "qxAa8G/+ZM7vSC/VjwwEhO+8FF6TI928BTalkQoSojM="
 xpack.security.session.idleTimeout: "1h"
 xpack.security.session.lifespan: "30d"
+
+telemetry.optIn: false

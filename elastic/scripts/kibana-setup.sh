@@ -42,7 +42,7 @@ echo "Kibana user created successfully"
 
 if [ -f /config/kibana/kibana.keystore ]; then
     echo "Copying existing keystore"
-    cp /config/kibana/kibana.keystore /usr/share/kibana/data/kibana.keystore
+    cp /config/kibana/kibana.keystore /usr/share/kibana/config/kibana.keystore
 else
     echo "=== CREATE Keystore ==="
     /usr/share/kibana/bin/kibana-keystore create
