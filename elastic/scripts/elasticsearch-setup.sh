@@ -4,6 +4,7 @@ umask 0002
 
 mkdir -p /usr/share/elasticsearch/config/certs/elasticsearch
 mkdir -p /usr/share/elasticsearch/config/certs/ca
+mkdir -p /config/elasticsearch
 
 if [ -f /config/elasticsearch/elasticsearch.keystore ]; then
     echo "Copying existing keystore"
@@ -31,7 +32,6 @@ if [[ -f /config/ca/ca.crt && -f /config/ca/ca.key && \
 fi
 
 # Create elastic search directory in the configuration volume
-mkdir -p /config/elasticsearch
 mkdir -p /config/ca
 mkdir -p /config/ssl
 mkdir -p /config/kibana
