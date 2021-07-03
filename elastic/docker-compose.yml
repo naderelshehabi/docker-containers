@@ -36,8 +36,8 @@ services:
     volumes:
       - elasticsearch:/usr/share/elasticsearch/data
       - elastic-cluster-config:/config
-      - ./scripts/elasticsearch-entrypoint.sh:/etc/elasticsearch/elasticsearch-entrypoint.sh
-      - ./scripts/elasticsearch-setup.sh:/etc/elasticsearch/elasticsearch-setup.sh
+      - ./scripts/elasticsearch-entrypoint.sh:/etc/elasticsearch/elasticsearch-entrypoint.sh:ro
+      - ./scripts/elasticsearch-setup.sh:/etc/elasticsearch/elasticsearch-setup.sh:ro
     
     networks:
       - backend
@@ -82,7 +82,7 @@ services:
       update_config:
         parallelism: 1
         delay: 30s
-        order: stop-first
+        order: start-first
         failure_action: rollback
         monitor: 30s
       rollback_config:
@@ -110,8 +110,8 @@ services:
 
     volumes:
      - elastic-cluster-config:/config
-     - ./scripts/kibana-entrypoint.sh:/etc/kibana/kibana-entrypoint.sh
-     - ./scripts/kibana-setup.sh:/etc/kibana/kibana-setup.sh
+     - ./scripts/kibana-entrypoint.sh:/etc/kibana/kibana-entrypoint.sh:ro
+     - ./scripts/kibana-setup.sh:/etc/kibana/kibana-setup.sh:ro
      # - kibana:/kibana
 
     networks:
@@ -153,7 +153,7 @@ services:
       update_config:
         parallelism: 1
         delay: 30s
-        order: stop-first
+        order: start-first
         failure_action: rollback
         monitor: 30s
       rollback_config:
@@ -170,8 +170,8 @@ services:
 
     volumes:
       - elastic-cluster-config:/config
-      - ./scripts/logstash-entrypoint.sh:/etc/logstash/logstash-entrypoint.sh
-      - ./scripts/logstash-setup.sh:/etc/logstash/logstash-setup.sh
+      - ./scripts/logstash-entrypoint.sh:/etc/logstash/logstash-entrypoint.sh:ro
+      - ./scripts/logstash-setup.sh:/etc/logstash/logstash-setup.sh:ro
       # - logstash:/logstash
 
     networks:
@@ -186,11 +186,75 @@ services:
     configs:
       - source: logstash-config
         target: /usr/share/logstash/config/logstash.yml
+      - source: logstash-pipeline
+        target: /usr/share/logstash/pipeline/logstash.conf
     
     secrets:
       - source: elastic-password
         target: elastic_password
         mode: 0444
+
+###################################################################################################
+
+  auditbeat:
+    image: docker.elastic.co/beats/auditbeat:${TAG}
+
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
+      
+    command: /usr/local/bin/beat-entrypoint.sh auditbeat
+
+    volumes:
+      - elastic-cluster-config:/config
+      - ./scripts/beat-setup.sh:/usr/local/bin/beat-setup.sh:ro
+      - ./scripts/beat-entrypoint.sh:/usr/local/bin/beat-entrypoint.sh:ro
+
+    networks:
+      - backend
+  
+    # healthcheck:
+    #   test: auditbeat --strict.perms=false test config
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 10
+
+    configs:
+      - source: auditbeat-config
+        target: /usr/share/auditbeat/auditbeat.yml
+    
+    secrets:
+      - source: elastic-password
+        target: elastic_password
+        mode: 0444
+
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+###################################################################################################
+
 
 networks:
   backend:
@@ -215,6 +279,12 @@ configs:
   logstash-config:
     name: ${logstash_config}
     file: ${logstash_config_file}
+  logstash-pipeline:
+    name: ${logstash_pipeline}
+    file: ${logstash_pipeline_file}
+  auditbeat-config:
+    name: ${auditbeat_config}
+    file: ${auditbeat_config_file}
 
 secrets:
   elastic-password:
