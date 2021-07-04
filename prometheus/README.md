@@ -10,7 +10,7 @@ For docker desktop in Windows, you have to follow the solution in [this issue](h
 First, in windows command, you need to run
 ```
 net use h: \\wsl$\docker-desktop-data
-```
+``
 
 This will create a network shortcut for the docker data folder that we can use in WSL.
 
@@ -27,4 +27,9 @@ H: /mnt/docker drvfs defaults 0 0
 This is used in the `docker-compose` for prometheus stack:
 ```
 - /mnt/docker/version-pack-data/community/docker:/rootfs/var/lib/docker:ro
+```
+
+if it's not working automatically for any reason, you can also manually mount the network point using
+```
+sudo mount -t drvfs h: /mnt/docker
 ```
