@@ -11,7 +11,7 @@ echo "===================="
 # then something went wrong.
 CA_CERT=/config/ca/ca.crt
 ELASTIC_PASSWORD=$(</run/secrets/elastic_password)
-ELASTICSEARCH_URL=https://elasticsearch:9200
+KIBANA_URL=http://kibana:5601/kibana
 
 while [ ! -f $CA_CERT ]
 do
@@ -21,12 +21,12 @@ done
 
 echo "Found CA certificate"
 
-# mkdir -p /usr/share/auditbeat/certs/ca/
-# cp /config/ca/ca.crt /usr/share/auditbeat/certs/ca/ca.crt
+# mkdir -p /usr/share/$beat/certs/ca/
+# cp /config/ca/ca.crt /usr/share/$beat/certs/ca/ca.crt
 
-# Wait for Elasticsearch to start up before doing anything.
-while [[ "$(curl -u "elastic:${ELASTIC_PASSWORD}" --cacert $CA_CERT -s -o /dev/null -w '%{http_code}' $ELASTICSEARCH_URL)" != "200" ]]; do
-    echo "Waiting for Elasticsearch"
+# Wait for Kibana to start up before doing anything.
+until curl -s "http://kibana:5601/kibana/login" | grep "Loading Elastic" > /dev/null; do
+    echo "Waiting for Kibana"
     sleep 5
 done
 
@@ -41,10 +41,10 @@ echo "adding ELASTIC_PASSWORD to keystore..."
 echo "$ELASTIC_PASSWORD" | ${beat} --strict.perms=false keystore add ELASTIC_PASSWORD --stdin
 ${beat} --strict.perms=false keystore list
 
-echo "Setting up dashboards..."
+# echo "Setting up dashboards..."
 # Load the sample dashboards for the Beat.
 # REF: https://www.elastic.co/guide/en/beats/metricbeat/master/metricbeat-sample-dashboards.html
-${beat} --strict.perms=false setup -v
+# ${beat} --strict.perms=false setup -v
 
 # echo "Copy keystore to ./config dir"
 # cp /usr/share/$beat/$beat.keystore /config/$beat/$beat.keystore

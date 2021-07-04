@@ -1,0 +1,35 @@
+# Docker logging driver must be set to JSON
+# Docker must be mounted to /var/lib/docker
+
+# filebeat.config:
+#   modules:
+#     path: ${path.config}/modules.d/*.yml
+#     reload.enabled: false
+
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+
+processors:
+  - add_docker_metadata:
+      host: "unix:///var/run/docker.sock"
+
+output.elasticsearch:
+  hosts: ['elasticsearch:9200']
+  protocol: "https"
+  username: elastic
+  # Read PW from filebeat.keystore
+  password: "${ELASTIC_PASSWORD}"
+  ssl.certificate_authorities: ["/config/ca/ca.crt"]
+
+setup.kibana:
+  host: "http://kibana:5601"
+  path: /kibana
+  username: elastic
+  password: "${ELASTIC_PASSWORD}"
+  protocol: "http"
+  ssl.enabled: false
+  ssl.certificate_authorities: ["/config/ca/ca.crt"]
+
+setup.ilm.overwrite: true
