@@ -58,6 +58,10 @@ metrics:
     addServicesLabels: true
     entryPoint: metrics
 
+tracing:
+  elastic:
+    serverURL: "http://elastic_apm-server:8200"
+
 providers:
   file:
     filename: /etc/traefik/dynamic.yml
