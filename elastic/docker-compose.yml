@@ -44,15 +44,15 @@ services:
 
     command: /etc/elasticsearch/elasticsearch-entrypoint.sh
 
-    # healthcheck:
-    #   test:
-    #     [
-    #       "CMD-SHELL",
-    #       "curl --cacert /usr/share/elasticsearch/config/certs/ca/ca.crt -s https://localhost:9200 || exit 1",
-    #     ]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --cacert /usr/share/elasticsearch/config/certs/ca/ca.crt -s https://localhost:9200 || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
     configs:
       - source: elasticsearch-config
@@ -117,15 +117,15 @@ services:
     networks:
       - backend
 
-    # healthcheck:
-    #   test:
-    #     [
-    #       "CMD-SHELL",
-    #       "curl --cacert /usr/share/kibana/config/certs/ca/ca.crt -s http://localhost:5601/kibana || exit 1",
-    #     ]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 10
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --cacert /usr/share/kibana/config/certs/ca/ca.crt -s http://localhost:5601/kibana || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
 
     configs:
       - source: kibana-config
@@ -164,7 +164,7 @@ services:
         limits:
           memory: 2048M
         reservations:
-          memory: 1024M
+          memory: 512M
     
     command: /etc/logstash/logstash-entrypoint.sh
 
@@ -177,11 +177,15 @@ services:
     networks:
       - backend
 
-    # healthcheck:
-    #   test: bin/logstash -t
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 10
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s http://localhost:9600 || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
 
     configs:
       - source: logstash-config
@@ -234,11 +238,11 @@ services:
     networks:
       - backend
   
-    # healthcheck:
-    #   test: auditbeat --strict.perms=false test config
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 10
+    healthcheck:
+      test: auditbeat --strict.perms=false test config
+      interval: 30s
+      timeout: 10s
+      retries: 10
 
     configs:
       - source: auditbeat-config
@@ -291,11 +295,11 @@ services:
     networks:
       - backend
 
-    # healthcheck:
-    #   test: filebeat --strict.perms=false test config
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 10
+    healthcheck:
+      test: filebeat --strict.perms=false test config
+      interval: 30s
+      timeout: 10s
+      retries: 10
 
     configs:
       - source: filebeat-config
@@ -347,11 +351,11 @@ services:
     networks:
       - backend
 
-    # healthcheck:
-    #   test: heartbeat --strict.perms=false test config
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 10
+    healthcheck:
+      test: heartbeat --strict.perms=false test config
+      interval: 30s
+      timeout: 10s
+      retries: 10
 
     configs:
       - source: heartbeat-config
@@ -403,11 +407,11 @@ services:
     networks:
       - backend
 
-    # healthcheck:
-    #   test: metricbeat --strict.perms=false test config
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 10
+    healthcheck:
+      test: metricbeat --strict.perms=false test config
+      interval: 30s
+      timeout: 10s
+      retries: 10
 
     configs:
       - source: metricbeat-config
@@ -464,11 +468,11 @@ services:
       - backend
       - bridge
 
-    # healthcheck:
-    #   test: packetbeat --strict.perms=false test config
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 10
+    healthcheck:
+      test: packetbeat --strict.perms=false test config
+      interval: 30s
+      timeout: 10s
+      retries: 10
 
     configs:
       - source: packetbeat-config
@@ -520,15 +524,15 @@ services:
     networks:
       - backend
 
-    # healthcheck:
-    #   test:
-    #     [
-    #       "CMD-SHELL",
-    #       "curl --cacert /config/ca/ca.crt -s http://localhost:8200/healthcheck || exit 1",
-    #     ]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 10
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --cacert /config/ca/ca.crt -s http://localhost:8200/healthcheck || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
 
     configs:
       - source: apm-server-config

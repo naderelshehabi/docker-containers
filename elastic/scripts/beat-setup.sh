@@ -41,10 +41,10 @@ echo "adding ELASTIC_PASSWORD to keystore..."
 echo "$ELASTIC_PASSWORD" | ${beat} --strict.perms=false keystore add ELASTIC_PASSWORD --stdin
 ${beat} --strict.perms=false keystore list
 
-# echo "Setting up dashboards..."
+echo "Setting up sample dashboards..."
 # Load the sample dashboards for the Beat.
 # REF: https://www.elastic.co/guide/en/beats/metricbeat/master/metricbeat-sample-dashboards.html
-# ${beat} --strict.perms=false setup -v
+${beat} --strict.perms=false setup -v
 
 # echo "Copy keystore to ./config dir"
 # cp /usr/share/$beat/$beat.keystore /config/$beat/$beat.keystore
