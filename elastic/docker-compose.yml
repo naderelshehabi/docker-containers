@@ -307,6 +307,61 @@ services:
         mode: 0444
 
 ###################################################################################################
+
+  heartbeat:
+    image: docker.elastic.co/beats/heartbeat:${TAG}
+    user: root
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 64M
+      
+    command: /usr/local/bin/beat-entrypoint.sh heartbeat
+
+    volumes:
+      - elastic-cluster-config:/config:ro
+      - ./scripts/beat-setup.sh:/usr/local/bin/beat-setup.sh:ro
+      - ./scripts/beat-entrypoint.sh:/usr/local/bin/beat-entrypoint.sh:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    networks:
+      - backend
+
+    # healthcheck:
+    #   test: heartbeat --strict.perms=false test config
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 10
+
+    configs:
+      - source: heartbeat-config
+        target: /usr/share/heartbeat/heartbeat.yml
+    
+    secrets:
+      - source: elastic-password
+        target: elastic_password
+        mode: 0444
+
 ###################################################################################################
 ###################################################################################################
 ###################################################################################################
@@ -344,6 +399,10 @@ configs:
   filebeat-config:
     name: ${filebeat_config}
     file: ${filebeat_config_file}
+
+  heartbeat-config:
+    name: ${heartbeat_config}
+    file: ${heartbeat_config_file}
 
 secrets:
   elastic-password:
