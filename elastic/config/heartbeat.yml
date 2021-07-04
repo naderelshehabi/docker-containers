@@ -1,0 +1,42 @@
+heartbeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+      templates:
+        - condition:
+            and:
+              - regexp:
+                  docker.container.id: ".*"
+              - not:
+                  regexp:
+                    # SQL Server doesn;t repond to ping
+                    docker.container.name: "sql-server|traefik"
+          config:
+            - type: icmp
+              hosts: ["${data.host}"]
+              name: "${data.docker.container.name}"
+              schedule: "@every 5s"
+              timeout: 1s
+
+processors:
+  - add_docker_metadata:
+      host: "unix:///var/run/docker.sock"
+
+output.elasticsearch:
+  hosts: ['elasticsearch:9200']
+  protocol: "https"
+  username: elastic
+  # Read PW from heartbeat.keystore
+  password: "${ELASTIC_PASSWORD}"
+  ssl.certificate_authorities: ["/config/ca/ca.crt"]
+
+setup.kibana:
+  host: "http://kibana:5601"
+  path: "/kibana"
+  username: elastic
+  password: "${ELASTIC_PASSWORD}"
+  protocol: "http"
+  ssl.enabled: false
+  ssl.certificate_authorities: ["/config/ca/ca.crt"]
+
+xpack.monitoring.enabled: true
