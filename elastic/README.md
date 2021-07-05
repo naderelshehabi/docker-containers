@@ -21,7 +21,7 @@ sudo mkdir /mnt/docker
 
 Finally, mount the network shortcut to the folder we created by adding the folowing line to `/etc/fstab`
 ```
-H: /mnt/docker drvfs defaults 0 0
+H: /mnt/docker drvfs defaults,uid=root,gid=1001
 ```
 
 This is used in the `docker-compose` for prometheus stack:
@@ -31,5 +31,5 @@ This is used in the `docker-compose` for prometheus stack:
 
 if it's not working automatically for any reason, you can also manually mount the network point using
 ```
-sudo mount -t drvfs h: /mnt/docker -o gid=1001
+sudo mount -t drvfs h: /mnt/docker -o uid=root,gid=1001
 ```
