@@ -16,6 +16,8 @@ server.ssl.enabled: false
 # server.ssl.certificate: /usr/share/kibana/config/certs/kibana/kibana.crt
 # server.ssl.key: /usr/share/kibana/config/certs/kibana/kibana.key
 
+enterpriseSearch.host: 'http://enterprise-search:3002'
+
 monitoring.ui.container.elasticsearch.enabled: true
 xpack.reporting.encryptionKey: "qxAa8G/+ZM7vSC/VjwwEhO+8FF6TI928BTalkQoSojM="
 xpack.security.encryptionKey: "qxAa8G/+ZM7vSC/VjwwEhO+8FF6TI928BTalkQoSojM="

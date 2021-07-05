@@ -15,13 +15,16 @@ secret_management.encryption_keys: [w+CZkDMnMEnBGkw35y1jDGOE5kxPMQWEl5iqhMRNWEs=
 ent_search.listen_host: 0.0.0.0
 
 # URL at which users reach Enterprise Search
-ent_search.external_url: https://localhost/search
+ent_search.external_url: https://search.127.0.0.1.nip.io
 
 # Elasticsearch URL and credentials
 elasticsearch.host: https://elasticsearch:9200
 elasticsearch.username: elastic
-elasticsearch.password: "[[ELASTIC_PASSWORD]]"
-elasticsearch.ssl.certificate_authority: "/config/ca/ca.crt"
+elasticsearch.password: "${ELASTIC_PASSWORD}"
+elasticsearch.ssl.enabled: true
+elasticsearch.ssl.verify: false
+
+ent_search.auth.native1.source: elasticsearch-native
 
 kibana.external_url: https://localhost/kibana
 
