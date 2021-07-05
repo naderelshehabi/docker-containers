@@ -29,5 +29,4 @@ setup.kibana:
   ssl.enabled: false
   ssl.certificate_authorities: ["/config/ca/ca.crt"]
 
-xpack.monitoring.enabled: true
 setup.ilm.overwrite: true
