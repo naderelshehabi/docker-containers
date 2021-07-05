@@ -546,7 +546,7 @@ services:
 
   enterprise-search:
     image: docker.elastic.co/enterprise-search/enterprise-search:${TAG}
-    user: root
+
     deploy:
       mode: replicated
       replicas: 1
@@ -574,7 +574,7 @@ services:
 
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.enterprise-search-http.rule=PathPrefix(`/search`)"
+        - "traefik.http.routers.enterprise-search-http.rule=Host(`search.127.0.0.1.nip.io`)"
         - "traefik.http.routers.enterprise-search-http.service=enterprise-search"
         - "traefik.http.routers.enterprise-search-http.entrypoints=websecure"
         - "traefik.http.routers.enterprise-search-http.middlewares=enterprise-search-compress"
@@ -583,7 +583,7 @@ services:
 
         - "traefik.http.middlewares.enterprise-search-compress.compress=true"
       
-    command: /usr/local/bin/enterprise-search-entrypoint.sh
+    entrypoint: ["/bin/tini", "--", "/usr/local/bin/enterprise-search-entrypoint.sh"]
 
     volumes:
       - elastic-cluster-config:/config:ro
@@ -597,7 +597,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "curl http://localhost:3002 || exit 1",
+          "curl http://localhost:3002/api/ent/v1/internal/health || exit 1",
         ]
       interval: 30s
       timeout: 10s
