@@ -466,7 +466,6 @@ services:
 
     networks:
       - backend
-      - bridge
 
     healthcheck:
       test: packetbeat --strict.perms=false test config
@@ -545,10 +544,78 @@ services:
 
 ###################################################################################################
 
+  enterprise-search:
+    image: docker.elastic.co/enterprise-search/enterprise-search:${TAG}
+    user: root
+    deploy:
+      mode: replicated
+      replicas: 1
+
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+
+      resources:
+        limits:
+          memory: 2048M
+        reservations:
+          memory: 128M
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.enterprise-search-http.rule=PathPrefix(`/search`)"
+        - "traefik.http.routers.enterprise-search-http.service=enterprise-search"
+        - "traefik.http.routers.enterprise-search-http.entrypoints=websecure"
+        - "traefik.http.routers.enterprise-search-http.middlewares=enterprise-search-compress"
+
+        - "traefik.http.services.enterprise-search.loadbalancer.server.port=3002"
+
+        - "traefik.http.middlewares.enterprise-search-compress.compress=true"
+      
+    command: /usr/local/bin/enterprise-search-entrypoint.sh
+
+    volumes:
+      - elastic-cluster-config:/config:ro
+      - ./scripts/enterprise-search-setup.sh:/usr/local/bin/enterprise-search-setup.sh:ro
+      - ./scripts/enterprise-search-entrypoint.sh:/usr/local/bin/enterprise-search-entrypoint.sh:ro
+
+    networks:
+      - backend
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl http://localhost:3002 || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+    configs:
+      - source: enterprise-search-config
+        target: /usr/share/enterprise-search/config/enterprise-search.yml
+    
+    secrets:
+      - source: elastic-password
+        target: elastic_password
+        mode: 0444
+
+###################################################################################################
+
 networks:
   backend:
-    external: true
-  bridge:
     external: true
 
 volumes:
@@ -591,6 +658,9 @@ configs:
   apm-server-config:
     name: ${apm_server_config}
     file: ${apm_server_config_file}
+  enterprise-search-config:
+    name: ${enterprise_search_config}
+    file: ${enterprise_search_config_file}
 
 secrets:
   elastic-password:
