@@ -17,5 +17,3 @@ setup.kibana:
   protocol: "http"
   ssl.enabled: false
   ssl.certificate_authorities: ["/config/ca/ca.crt"]
-
-xpack.monitoring.enabled: true

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -uo pipefail
+
 # Wait for ca file to exist before we continue. If the ca file doesn't exist
 # then something went wrong.
 CA_CERT=/config/ca/ca.crt

@@ -125,7 +125,7 @@ services:
         ]
       interval: 30s
       timeout: 10s
-      retries: 10
+      retries: 20
 
     configs:
       - source: kibana-config
@@ -185,7 +185,7 @@ services:
         ]
       interval: 30s
       timeout: 10s
-      retries: 10
+      retries: 20
 
     configs:
       - source: logstash-config
@@ -242,7 +242,7 @@ services:
       test: auditbeat --strict.perms=false test config
       interval: 30s
       timeout: 10s
-      retries: 10
+      retries: 20
 
     configs:
       - source: auditbeat-config
@@ -258,6 +258,7 @@ services:
   filebeat:
     image: docker.elastic.co/beats/filebeat:${TAG}
     user: root
+
     deploy:
       mode: replicated
       replicas: 1
@@ -299,7 +300,7 @@ services:
       test: filebeat --strict.perms=false test config
       interval: 30s
       timeout: 10s
-      retries: 10
+      retries: 20
 
     configs:
       - source: filebeat-config
@@ -355,7 +356,7 @@ services:
       test: heartbeat --strict.perms=false test config
       interval: 30s
       timeout: 10s
-      retries: 10
+      retries: 20
 
     configs:
       - source: heartbeat-config
@@ -411,7 +412,7 @@ services:
       test: metricbeat --strict.perms=false test config
       interval: 30s
       timeout: 10s
-      retries: 10
+      retries: 20
 
     configs:
       - source: metricbeat-config
@@ -462,7 +463,6 @@ services:
       - elastic-cluster-config:/config:ro
       - ./scripts/beat-setup.sh:/usr/local/bin/beat-setup.sh:ro
       - ./scripts/beat-entrypoint.sh:/usr/local/bin/beat-entrypoint.sh:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
 
     networks:
       - backend
@@ -471,7 +471,7 @@ services:
       test: packetbeat --strict.perms=false test config
       interval: 30s
       timeout: 10s
-      retries: 10
+      retries: 20
 
     configs:
       - source: packetbeat-config
@@ -486,7 +486,7 @@ services:
 
   apm-server:
     image: docker.elastic.co/apm/apm-server:${TAG}
-    user: root
+
     deploy:
       mode: replicated
       replicas: 1
@@ -518,7 +518,6 @@ services:
       - elastic-cluster-config:/config:ro
       - ./scripts/beat-setup.sh:/usr/local/bin/beat-setup.sh:ro
       - ./scripts/beat-entrypoint.sh:/usr/local/bin/beat-entrypoint.sh:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
 
     networks:
       - backend
@@ -531,7 +530,7 @@ services:
         ]
       interval: 30s
       timeout: 10s
-      retries: 10
+      retries: 20
 
     configs:
       - source: apm-server-config
@@ -601,7 +600,7 @@ services:
         ]
       interval: 30s
       timeout: 10s
-      retries: 10
+      retries: 20
 
     configs:
       - source: enterprise-search-config
