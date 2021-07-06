@@ -112,7 +112,6 @@ services:
      - elastic-cluster-config:/config
      - ./scripts/kibana-entrypoint.sh:/etc/kibana/kibana-entrypoint.sh:ro
      - ./scripts/kibana-setup.sh:/etc/kibana/kibana-setup.sh:ro
-     # - kibana:/kibana
 
     networks:
       - backend
@@ -172,7 +171,6 @@ services:
       - elastic-cluster-config:/config
       - ./scripts/logstash-entrypoint.sh:/etc/logstash/logstash-entrypoint.sh:ro
       - ./scripts/logstash-setup.sh:/etc/logstash/logstash-setup.sh:ro
-      # - logstash:/logstash
 
     networks:
       - backend
@@ -620,8 +618,6 @@ networks:
 volumes:
   elasticsearch: {}
   elastic-cluster-config: {}
-  # kibana: {}
-  # logstash: {}
 
 configs:
   elasticsearch-config:

@@ -3,7 +3,7 @@ server.rewriteBasePath: true
 
 server.name: kibana
 server.host: "0.0.0.0"
-# path.data: "/kibana"
+# path.data: "/data"
 
 elasticsearch.hosts: ["https://elasticsearch:9200/"]
 
