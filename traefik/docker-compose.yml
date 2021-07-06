@@ -48,10 +48,6 @@ services:
       - "80:80"
       # https
       - "443:443"
-      # cadvisor
-      - "8080:8080"
-      # cockroachdb
-      - "26257:26257"
 
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
