@@ -26,16 +26,7 @@ entryPoints:
     http:
       tls: {}
   
-  cadvisor:
-    address: ":8080"
-    http:
-      tls: {}
-
-
-  cockroachdb:
-    address: ":26257"
-  
-  ping:
+   ping:
     address: ":8000"
   
   metrics:
