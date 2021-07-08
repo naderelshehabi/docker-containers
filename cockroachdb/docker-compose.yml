@@ -5,8 +5,69 @@
 version: "3.9"
 
 services:
+  pgadmin:
+    image: dpage/pgadmin4:${PGADMIN_TAG}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 30s
+        order: stop-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 0
+        order: stop-first
+
+      resources:
+        limits:
+          memory: 1024M
+        reservations:
+          memory: 64M
+
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.pgadmin.rule=PathPrefix(`/pgadmin`)"
+        - "traefik.http.routers.pgadmin.entrypoints=websecure"
+        - "traefik.http.routers.pgadmin.middlewares=pgadmin-compress"
+        - "traefik.http.services.pgadmin-service.loadbalancer.server.port=80"
+        - "traefik.http.middlewares.pgadmin-compress.compress=true"
+
+    environment:
+      SCRIPT_NAME: /pgadmin
+
+    entrypoint: /pgadmin-entrypoint.sh
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost/pgadmin/misc/ping || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    volumes:
+      - ./scripts/pgadmin-entrypoint.sh:/pgadmin-entrypoint.sh:ro
+      - pgadmin:/var/lib/pgadmin
+
+    secrets:
+      - source: pgadmin-user
+        target: pgadmin_user
+      - source: pgadmin-password
+        target: pgadmin_password
+
+    networks:
+      - backend
+
   cockroachdb-1:
-    image: cockroachdb/cockroach:${TAG}
+    image: cockroachdb/cockroach:${COCKROACHDB_TAG}
     deploy:
       replicas: 1
       restart_policy:
@@ -89,7 +150,7 @@ services:
       "
 
   cockroachdb-2:
-    image: cockroachdb/cockroach:${TAG}
+    image: cockroachdb/cockroach:${COCKROACHDB_TAG}
     deploy:
       replicas: 1
       restart_policy:
@@ -161,7 +222,7 @@ services:
       "
 
   cockroachdb-3:
-    image: cockroachdb/cockroach:${TAG}
+    image: cockroachdb/cockroach:${COCKROACHDB_TAG}
     deploy:
       replicas: 1
       restart_policy:
@@ -233,9 +294,10 @@ services:
       "
 
 volumes:
-  cockroachdb-1:
-  cockroachdb-2:
-  cockroachdb-3:
+  pgadmin: {}
+  cockroachdb-1: {}
+  cockroachdb-2: {}
+  cockroachdb-3: {}
 
 # Create this as driver=Overlay scope=swarm before deploying
 networks:
@@ -243,6 +305,12 @@ networks:
     external: true
 
 secrets:
+  pgadmin-user:
+    name: ${pgadmin_user}
+    file: ${pgadmin_user_file}
+  pgadmin-password:
+    name: ${pgadmin_password}
+    file: ${pgadmin_password_file}
   ca-cert:
     name: ${CA_CERT}
     file: ${CA_CERT_FILE}
