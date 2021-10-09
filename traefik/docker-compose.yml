@@ -1,12 +1,13 @@
 # This file uses variable substitution
 # To deploy to docker swarm use the following command
 # docker stack deploy -c <(docker-compose --env-file docker.env config) traefik
+# docker stack deploy -c <(echo "version: '3.9'";docker compose --env-file docker.env config) traefik
 
 version: "3.9"
 
 services:
   traefik:
-    image: traefik:v2.4.8
+    image: traefik:2.5.3
 
     deploy:
       replicas: 1
@@ -28,7 +29,7 @@ services:
       resources:
         limits:
           # cpus: "1.0"
-          memory: 1024M
+          memory: 2048M
         reservations:
           memory: 32M
 
